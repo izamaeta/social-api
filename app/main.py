@@ -50,15 +50,21 @@ async def root():
 
 @app.get("/posts")
 async def get_posts():
-    return {"data": my_posts}
+    cursor.execute("""SELECT * FROM posts""")
+    posts = cursor.fetchall()
+    print(posts) 
+    return {"data": posts}
 
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
 def create_post(post: Post):
-    post_dict = post.dict()
-    post_dict['id'] = randrange(0, 10000000)
-    my_posts.append(post_dict)
-    return {"data": post_dict}
+    ##cursor.execute(f"INSERT INTO posts (title, content, published) VALUES({post.title}, {post.content}, {post.published})") ASLA Kullanılmaz
+    
+    cursor.execute(""" INSERT INTO posts(title, content, published) VALUES (%s, %s, %s) RETURNING * """, 
+                                                (post.title, post.content, post.published)) ##ancak kullanımında da ne kadar postman oluşturuldu dese de db'de oluşturulmadığını görüyoruz
+    conn.commit()
+    new_post = cursor.fetchone()
+    return {"data": new_post}
 
 @app.get("/posts/{id}")
 def get_post(id: int, response: Response):
@@ -69,6 +75,8 @@ def get_post(id: int, response: Response):
         #response.status_code = status.HTTP_404_NOT_FOUND
         #return {'message': f"post with id: {id} not found"}
     return {"post_detail": post}
+
+
 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int):
