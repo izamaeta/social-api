@@ -12,7 +12,7 @@ from .database import engine, SessionLocal, get_db
 
 models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+app = FastAPI() 
 
 
 class Post(BaseModel):
@@ -52,10 +52,11 @@ def find_index_post(id):
 async def root():
     return {"message": "Hello World"}
 
+
 @app.get("/sqlalchemy")
 def test_posts(db: Session =  Depends(get_db)):
-    return{"status": "success" }
-
+    posts = db.query(models.Post).all()
+    return {"data": posts}
 
 
 @app.get("/posts")
