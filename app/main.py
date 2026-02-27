@@ -68,13 +68,20 @@ async def get_posts(db: Session =  Depends(get_db)):
 
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_post(post: Post):
+def create_post(post: Post, db: Session = Depends(get_db)):
     ##cursor.execute(f"INSERT INTO posts (title, content, published) VALUES({post.title}, {post.content}, {post.published})") ASLA Kullanılmaz
     
-    cursor.execute(""" INSERT INTO posts(title, content, published) VALUES (%s, %s, %s) RETURNING * """, 
-                                                (post.title, post.content, post.published)) ##ancak kullanımında da ne kadar postman oluşturuldu dese de db'de oluşturulmadığını görüyoruz
-    conn.commit()
-    new_post = cursor.fetchone()
+    #cursor.execute(""" INSERT INTO posts(title, content, published) VALUES (%s, %s, %s) RETURNING * """, 
+    #                                            (post.title, post.content, post.published)) ##ancak kullanımında da ne kadar postman oluşturuldu dese de db'de oluşturulmadığını görüyoruz
+    #conn.commit()
+    #new_post = cursor.fetchone()
+
+    # new_post = models.Post(title=post.title, content=post.content, published=post.published) (uzun yolu)
+    new_post = models.Post(**post.dict()) #kısa hali
+    db.add(new_post)
+    db.commit()
+    db.refresh(new_post)
+
     return {"data": new_post}
 
 
