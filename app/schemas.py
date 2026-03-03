@@ -29,5 +29,7 @@ class UserOut(BaseModel):
     email: EmailStr
     created_at: datetime
 
-    class Config:
+    class Config: 
         from_attributes = True
+
+
