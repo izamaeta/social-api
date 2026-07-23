@@ -19,8 +19,8 @@ async def get_posts(db: Session =  Depends(get_db)):
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.Post)
-def create_post(post: schemas.PostCreate, db: Session = Depends(get_db), get_current_user: 
-int= Depends(oauth2.get_current_user)):
+def create_post(post: schemas.PostCreate, db: Session = Depends(get_db), user_id: int 
+= Depends(oauth2.get_current_user)):
     ##cursor.execute(f"INSERT INTO posts (title, content, published) VALUES({post.title}, {post.content}, {post.published})") ASLA Kullanılmaz
     
     #cursor.execute(""" INSERT INTO posts(title, content, published) VALUES (%s, %s, %s) RETURNING * """, 
@@ -29,6 +29,7 @@ int= Depends(oauth2.get_current_user)):
     #new_post = cursor.fetchone()
 
     # new_post = models.Post(title=post.title, content=post.content, published=post.published) (uzun yolu)
+    print(user_id)
     new_post = models.Post(**post.dict()) #kısa hali
     db.add(new_post)
     db.commit()
@@ -53,7 +54,8 @@ def get_post(id: int, db: Session = Depends(get_db)):
 
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int, db: Session = Depends(get_db)):
+def delete_post(id: int, db: Session = Depends(get_db), user_id: int 
+= Depends(oauth2.get_current_user)):
     #cursor.execute("""DELETE FROM posts WHERE id = %s returning *""", str((id),))
     #deleted_post = cursor.fetchone()
     #conn.commit()
@@ -69,7 +71,8 @@ def delete_post(id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{id}", status_code=status.HTTP_200_OK, response_model=schemas.Post)
-def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends(get_db)):
+def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends(get_db), user_id: int 
+= Depends(oauth2.get_current_user)):
     
     #cursor.execute("""UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING *""", 
     #                (post.title, post.content, post.published, str(id))) 

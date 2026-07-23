@@ -41,7 +41,7 @@ class UserLogin(BaseModel):
 
 class Token(BaseModel):
     access_token: str
-    tokeny_type: str
+    token_type: str
 
 class TokenData(BaseModel):
     id: Optional[str] = None
