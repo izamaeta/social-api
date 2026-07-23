@@ -39,7 +39,7 @@ def create_post(post: schemas.PostCreate, db: Session = Depends(get_db), current
 
 
 @router.get("/{id}", response_model=schemas.Post)
-def get_post(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+def get_post(id: int, db: Session = Depends(get_db)):
     #cursor.execute("""SELECT * FROM posts WHERE id = %s""", str((id),))
     #post = cursor.fetchone()
     post = db.query(models.Post).filter(models.Post.id == id).first()
@@ -59,13 +59,14 @@ def delete_post(id: int, db: Session = Depends(get_db), current_user: int
     #cursor.execute("""DELETE FROM posts WHERE id = %s returning *""", str((id),))
     #deleted_post = cursor.fetchone()
     #conn.commit()
-    post = db.query(models.Post).filter(models.Post.id == id)
+    post_query = db.query(models.Post).filter(models.Post.id == id)
+    post = post_query.first()
 
-    if post.first() == None:
+    if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"post with id: {id} is not exist")
-    
-    post.delete(synchronize_session=False)
+
+    post_query.delete(synchronize_session=False)
     db.commit()
 
 
@@ -87,6 +88,7 @@ def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"post with id: {id} is not exist"
         )
+    
     
     post_query.update(updated_post.dict(), synchronize_session=False)
     db.commit()
