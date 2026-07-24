@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter
 from .. import models, schemas, oauth2
-from typing import List
+from typing import List, Optional
 from sqlalchemy.orm import Session
 from ..database import get_db
 
@@ -11,10 +11,10 @@ router = APIRouter(
 )
 
 @router.get("/", response_model=List[schemas.Post])
-async def get_posts(db: Session =  Depends(get_db)):
-    #cursor.execute("""SELECT * FROM posts""")
+async def get_posts(db: Session = Depends(get_db), 
+                    limit: int = 10, skip: int = 0, search: Optional[str] = ""):    #cursor.execute("""SELECT * FROM posts""")
     #posts = cursor.fetchall()
-    posts = db.query(models.Post).all()
+    posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()    
     return posts
 
 
@@ -38,12 +38,16 @@ def create_post(post: schemas.PostCreate, db: Session = Depends(get_db), current
     return new_post
 
 
+
+
 @router.get("/{id}", response_model=schemas.Post)
 def get_post(id: int, db: Session = Depends(get_db)):
     #cursor.execute("""SELECT * FROM posts WHERE id = %s""", str((id),))
     #post = cursor.fetchone()
+
     post = db.query(models.Post).filter(models.Post.id == id).first()
     print(post)
+
 
     if not post: 
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -65,7 +69,9 @@ def delete_post(id: int, db: Session = Depends(get_db), current_user: int
     if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"post with id: {id} is not exist")
-
+    if post.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized perform requested action")
+    
     post_query.delete(synchronize_session=False)
     db.commit()
 
@@ -79,7 +85,7 @@ def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends
     #                (post.title, post.content, post.published, str(id))) 
     #updated_post = cursor.fetchone()
     #conn.commit()
-
+ 
     post_query = db.query(models.Post).filter(models.Post.id == id)
     post = post_query.first()
 
@@ -88,7 +94,10 @@ def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"post with id: {id} is not exist"
         )
-    
+
+    if post.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized perform requested action")
+
     
     post_query.update(updated_post.dict(), synchronize_session=False)
     db.commit()
