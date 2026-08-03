@@ -1,5 +1,7 @@
 import pytest
 from app import schemas
+from jose import jwt
+from app.config import settings
 
 
 def test_create_user(client):
@@ -9,9 +11,6 @@ def test_create_user(client):
     new_user = schemas.UserOut(**res.json())
     assert new_user.email == "hello123@gmail.com"
     assert res.status_code == 201
-
-from jose import jwt
-from app.config import settings
 
 
 def test_login_user(test_user, client):
