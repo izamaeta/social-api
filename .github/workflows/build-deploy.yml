@@ -50,6 +50,8 @@ jobs:
   build_and_push:
     needs: [test]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: production
     runs-on: ubuntu-latest
     steps:
       - name: pulling git repo
