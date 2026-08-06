@@ -1,5 +1,7 @@
 import pytest
 from app import schemas
+import json
+from app.redis_client import redis_client
 
 
 def test_get_all_posts(authorized_client, test_posts):
@@ -128,3 +130,30 @@ def test_update_post_non_exist(authorized_client, test_user, test_posts):
     }
     res = authorized_client.put("/posts/8000000", json=data)
     assert res.status_code == 404
+
+
+def test_get_posts_uses_cache(authorized_client, test_posts):
+    res1 = authorized_client.get("/posts/")
+    assert res1.status_code == 200
+
+    cache_key = "posts_cache:10:0:"
+    cached_raw = redis_client.get(cache_key)
+    assert cached_raw is not None
+
+    cached_data = json.loads(cached_raw)
+    assert len(cached_data) == len(test_posts)
+
+    res2 = authorized_client.get("/posts/")
+    assert res2.status_code == 200
+    assert res2.json() == res1.json()
+
+
+def test_cache_invalidated_on_create_post(authorized_client, test_posts):
+    authorized_client.get("/posts/")
+    cache_key = "posts_cache:10:0:"
+    assert redis_client.get(cache_key) is not None
+
+    authorized_client.post(
+        "/posts/", json={"title": "new post", "content": "new content"})
+
+    assert redis_client.get(cache_key) is None
