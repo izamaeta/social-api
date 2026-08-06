@@ -35,3 +35,15 @@ def test_login_user(test_user, client):
 def test_incorrect_login(test_user, client, email, password, status_code):
     res = client.post("/login", data={"username": email, "password": password})
     assert res.status_code == status_code
+
+
+def test_rate_limit_on_login(client, test_user):
+    for _ in range(5):
+        res = client.post(
+            "/login", data={"username": test_user['email'], "password": "wrongpassword"})
+        assert res.status_code == 403
+
+    res = client.post(
+        "/login", data={"username": test_user['email'], "password": "wrongpassword"})
+    assert res.status_code == 429
+    assert "Retry-After" in res.headers

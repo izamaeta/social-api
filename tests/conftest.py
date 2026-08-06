@@ -3,6 +3,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.main import app
+from app.redis_client import redis_client
 
 from app.config import settings
 from app.database import get_db, Base
@@ -90,3 +91,9 @@ def test_posts(test_user, session, test_user2):
     session.add_all(posts)
     session.commit()
     return session.query(models.Post).all()
+
+
+@pytest.fixture(autouse=True)
+def clear_redis():
+    redis_client.flushdb()
+    yield
