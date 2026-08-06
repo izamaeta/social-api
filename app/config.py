@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     secret_key: str
     algorithm: str
     access_token_expire_minutes: int
+    redis_hostname: str
+    redis_port: str
+    redis_password: str
 
     class Config:
         env_file = Path(__file__).resolve().parent.parent / ".env"

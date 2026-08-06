@@ -15,6 +15,7 @@ services:
       - ./.env
     environment:
       - DATABASE_HOSTNAME=postgres
+      - REDIS_HOSTNAME=redis
 
   postgres:
     image: postgres
